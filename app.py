@@ -1,8 +1,36 @@
 from PyQt5.QtCore import Qt, QThread, QTimer
 from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QApplication, QSlider
-from pyqtgraph import ImageView
+from PyQt5.QtGui import QImage, QPainter
 import numpy as np
 import cv2
+
+
+class MyImageWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.image = QImage()
+        self._red = (0, 0, 255)
+        self._width = 2
+        self._min_size = (30, 30)
+
+    def image_data_slot(self, image_data):
+        self.image = self.get_qimage(image_data)
+        if self.image.size() != self.size():
+            self.setFixedSize(self.image.size())
+        self.update()
+
+    @staticmethod
+    def get_qimage(image: np.ndarray):
+        height, width, colors = image.shape
+        bytesPerLine = 3 * width
+        image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        image = image.rgbSwapped()
+        return image
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.drawImage(0, 0, self.image)
+        self.image = QImage()
 
 
 class Camera:
@@ -38,14 +66,14 @@ class Camera:
 
 
 class StartWindow(QMainWindow):
-    def __init__(self, camera=None):
+    def __init__(self, cam=None):
         super().__init__()
-        self.camera = camera
+        self.camera = cam
 
         self.central_widget = QWidget()
         self.button_frame = QPushButton('Acquire Frame', self.central_widget)
         self.button_movie = QPushButton('Start Movie', self.central_widget)
-        self.image_view = ImageView()
+        self.image_view = MyImageWidget()
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(0, 10)
 
@@ -67,10 +95,12 @@ class StartWindow(QMainWindow):
 
     def update_image(self):
         frame = self.camera.get_frame()
-        self.image_view.setImage(frame.T)
+        if len(frame) > 1:
+            self.image_view.image_data_slot(frame)
 
     def update_movie(self):
-        self.image_view.setImage(self.camera.last_frame.T)
+        if len(self.camera.last_frame) > 1:
+            self.image_view.image_data_slot(self.camera.last_frame)
 
     def update_brightness(self, value):
         value /= 10
@@ -88,7 +118,7 @@ class MovieThread(QThread):
         self.camera = cam
 
     def run(self):
-        self.camera.acquire_movie(200)
+        self.camera.acquire_movie(2000)
 
 
 camNumber = 0
