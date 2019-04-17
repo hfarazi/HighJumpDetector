@@ -4,11 +4,12 @@ from pyqtgraph import ImageView
 import numpy as np
 import cv2
 
+
 class Camera:
     def __init__(self, cam_num):
         self.cam_num = cam_num
         self.cap = None
-        self.last_frame = np.zeros((1,1))
+        self.last_frame = np.zeros((1, 1))
 
     def initialize(self):
         self.cap = cv2.VideoCapture(self.cam_num)
@@ -37,7 +38,7 @@ class Camera:
 
 
 class StartWindow(QMainWindow):
-    def __init__(self, camera = None):
+    def __init__(self, camera=None):
         super().__init__()
         self.camera = camera
 
@@ -46,7 +47,7 @@ class StartWindow(QMainWindow):
         self.button_movie = QPushButton('Start Movie', self.central_widget)
         self.image_view = ImageView()
         self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(0,10)
+        self.slider.setRange(0, 10)
 
         self.layout = QVBoxLayout(self.central_widget)
         self.layout.addWidget(self.button_frame)
@@ -61,6 +62,8 @@ class StartWindow(QMainWindow):
 
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_movie)
+
+        self.movie_thread = None
 
     def update_image(self):
         frame = self.camera.get_frame()
@@ -80,14 +83,15 @@ class StartWindow(QMainWindow):
 
 
 class MovieThread(QThread):
-    def __init__(self, camera):
+    def __init__(self, cam):
         super().__init__()
-        self.camera = camera
+        self.camera = cam
 
     def run(self):
         self.camera.acquire_movie(200)
 
-camNumber=0
+
+camNumber = 0
 camera = Camera(camNumber)
 camera.initialize()
 
