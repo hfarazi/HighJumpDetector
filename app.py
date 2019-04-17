@@ -1,68 +1,8 @@
 from PyQt5.QtCore import Qt, QThread, QTimer
 from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QApplication, QSlider
-from PyQt5.QtGui import QImage, QPainter
-import numpy as np
-import cv2
 
-
-class MyImageWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.image = QImage()
-        self._red = (0, 0, 255)
-        self._width = 2
-        self._min_size = (30, 30)
-
-    def image_data_slot(self, image_data):
-        self.image = self.get_qimage(image_data)
-        if self.image.size() != self.size():
-            self.setFixedSize(self.image.size())
-        self.update()
-
-    @staticmethod
-    def get_qimage(image: np.ndarray):
-        height, width, colors = image.shape
-        bytesPerLine = 3 * width
-        image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        image = image.rgbSwapped()
-        return image
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.drawImage(0, 0, self.image)
-        self.image = QImage()
-
-
-class Camera:
-    def __init__(self, cam_num):
-        self.cam_num = cam_num
-        self.cap = None
-        self.last_frame = np.zeros((1, 1))
-
-    def initialize(self):
-        self.cap = cv2.VideoCapture(self.cam_num)
-
-    def get_frame(self):
-        ret, self.last_frame = self.cap.read()
-        return self.last_frame
-
-    def acquire_movie(self, num_frames):
-        movie = []
-        for _ in range(num_frames):
-            movie.append(self.get_frame())
-        return movie
-
-    def set_brightness(self, value):
-        self.cap.set(cv2.CAP_PROP_BRIGHTNESS, value)
-
-    def get_brightness(self):
-        return self.cap.get(cv2.CAP_PROP_BRIGHTNESS)
-
-    def close_camera(self):
-        self.cap.release()
-
-    def __str__(self):
-        return 'OpenCV Camera {}'.format(self.cam_num)
+from Camera import Camera
+from MyImageWidget import MyImageWidget
 
 
 class StartWindow(QMainWindow):
