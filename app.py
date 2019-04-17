@@ -87,7 +87,8 @@ class MovieThread(QThread):
     def run(self):
         self.camera.acquire_movie(200)
 
-camera = Camera(0)
+camNumber=0
+camera = Camera(camNumber)
 camera.initialize()
 
 app = QApplication([])
