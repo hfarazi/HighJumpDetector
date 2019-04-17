@@ -10,7 +10,7 @@ class MyImageWidget(QWidget):
         self._red = (0, 0, 255)
         self._width = 2
         self._min_size = (400, 400)
-        self.image_data_slot(np.zeros((480, 640, 3), np.uint8))
+        self.image_data_slot(np.zeros((480, 480, 3), np.uint8))
 
     def image_data_slot(self, image_data):
         self.image = self.get_qimage(image_data)
